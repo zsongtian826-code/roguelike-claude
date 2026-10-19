@@ -1,0 +1,149 @@
+:root {
+  --bg: #0d0a14;
+  --bg-2: #15101e;
+  --panel: rgba(28, 21, 40, 0.88);
+  --panel-solid: #1c1528;
+  --line: #3b3250;
+  --text: #f1eadf;
+  --muted: #b3a9c2;
+  --amber: #ffb547;
+  --amber-2: #ffd37a;
+  --red: #f0505a;
+  --green: #4ade80;
+  --blue: #6aaef2;
+  --focus: #ffd37a;
+  --radius: 14px;
+  --font-body: system-ui, -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Noto Sans JP', 'Segoe UI', sans-serif;
+  --font-display: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', 'Times New Roman', serif;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: radial-gradient(ellipse at 50% -10%, #2a1d3f 0%, var(--bg) 60%) fixed, var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 0.35em;
+  margin: 0 1px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: #261d36;
+  color: var(--amber-2);
+  font: 600 0.82em/1.6 var(--font-body);
+  text-align: center;
+}
+
+/* ---- ボタン ---- */
+.btn {
+  appearance: none;
+  min-height: 48px;
+  padding: 10px 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #261d36;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.btn:hover {
+  background: #31264a;
+  border-color: #5a4a7c;
+}
+.btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+.btn-primary {
+  border-color: #ffcf7a;
+  background: linear-gradient(180deg, #ffc760, #f09a27);
+  color: #2a1604;
+  box-shadow: 0 6px 22px rgba(255, 181, 71, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.btn-primary:hover {
+  background: linear-gradient(180deg, #ffd27c, #f6a736);
+  border-color: #ffe0a0;
+  box-shadow: 0 8px 28px rgba(255, 181, 71, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+.btn-big {
+  min-height: 60px;
+  width: 100%;
+  font-size: 1.2rem;
+}
+
+.chip {
+  appearance: none;
+  min-height: 34px;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(38, 29, 54, 0.9);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.chip:hover {
+  color: var(--text);
+  border-color: #5a4a7c;
+}
+.chip-danger {
+  border-color: var(--red);
+  color: #ffd5d8;
+  background: rgba(120, 28, 36, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

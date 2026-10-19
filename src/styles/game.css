@@ -1,0 +1,759 @@
+/* ---- ゲーム画面のレイアウト ----
+   幅が狭い(スマホ縦): 上から HUD → マップ → ログ+方向ボタン
+   広い(PC・横向き): 左にマップ、右に HUD・ログ・方向ボタン・凡例 */
+.game {
+  --board: min(calc(100vw - 16px), calc(100svh - 330px), 640px);
+  --cell: calc(var(--board) / 11);
+  display: grid;
+  grid-template-areas: 'hud' 'stage' 'side';
+  justify-items: center;
+  gap: 8px;
+  min-height: 100svh;
+  padding: 8px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+.hud {
+  grid-area: hud;
+  width: var(--board);
+}
+.stage {
+  grid-area: stage;
+  position: relative;
+  width: var(--board);
+  height: var(--board);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.side {
+  grid-area: side;
+  width: var(--board);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 10px;
+}
+.guide {
+  display: none;
+}
+
+@media (min-width: 860px), (orientation: landscape) and (min-width: 560px) {
+  .game {
+    --board: min(calc(100svh - 24px), calc(100vw - 440px), 760px);
+    grid-template-areas: 'stage hud' 'stage side';
+    grid-template-columns: var(--board) minmax(300px, 380px);
+    grid-template-rows: auto 1fr;
+    justify-content: center;
+    align-content: center;
+    align-items: start;
+    gap: 12px 20px;
+    padding: 12px;
+  }
+  .hud,
+  .side {
+    width: auto;
+    justify-self: stretch;
+  }
+  .side {
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: 12px;
+  }
+  .side .dpad {
+    justify-self: center;
+    order: 2;
+  }
+  .log {
+    order: 1;
+  }
+  .guide {
+    display: block;
+    order: 3;
+  }
+}
+@media (max-width: 859px) and (orientation: portrait) {
+  .log li:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+/* ---- HUD ---- */
+.hud {
+  display: grid;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.hud-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hud-floor {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  min-width: 0;
+}
+.hud-floor-num {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--amber-2);
+  letter-spacing: 0.06em;
+}
+.hud-floor-num small {
+  font-size: 0.7em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.hud-floor-name {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.hud-buttons {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.hp {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+.hp-label {
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--red);
+}
+.hp-bar {
+  position: relative;
+  height: 18px;
+  border: 1px solid #5a2a33;
+  border-radius: 999px;
+  background: #170d14;
+  overflow: hidden;
+}
+.hp-fill,
+.hp-trail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+}
+.hp-fill {
+  background: linear-gradient(180deg, #ff7a82, #d9323e);
+  transition: width 0.25s ease-out;
+}
+.hp-trail {
+  background: #fff3;
+  transition: width 0.7s ease-out 0.35s;
+}
+.hp[data-tone='high'] .hp-fill {
+  background: linear-gradient(180deg, #6ee89b, #25a85a);
+}
+.hp[data-tone='high'] .hp-label {
+  color: var(--green);
+}
+.hp[data-tone='mid'] .hp-fill {
+  background: linear-gradient(180deg, #ffd06a, #e69a1d);
+}
+.hp[data-tone='mid'] .hp-label {
+  color: var(--amber);
+}
+.hp[data-tone='low'] .hp-bar {
+  animation: hp-pulse 0.9s ease-in-out infinite;
+}
+.hp-num {
+  min-width: 3.6em;
+  text-align: right;
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.hp-num small {
+  color: var(--muted);
+  font-size: 0.7em;
+  font-weight: 600;
+}
+.hud-stats {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr 1.3fr;
+  gap: 6px;
+  margin: 0;
+}
+.hud-stats > div {
+  white-space: nowrap;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #120d1b;
+}
+.hud-stats dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.hud-stats dd {
+  margin: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.hud-stats dd small {
+  color: var(--muted);
+  font-weight: 600;
+}
+.hud-seed {
+  font-size: 0.8rem;
+}
+@keyframes hp-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 80, 90, 0); }
+  50% { box-shadow: 0 0 12px 2px rgba(240, 80, 90, 0.7); }
+}
+
+/* ---- ログ ---- */
+.log {
+  display: grid;
+  align-content: end;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 10px;
+  min-height: 88px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  font-size: 0.84rem;
+}
+.log li {
+  opacity: 0.55;
+}
+.log li:first-child {
+  opacity: 1;
+  font-weight: 600;
+  animation: log-in 0.25s ease-out;
+}
+.log li:nth-child(2) { opacity: 0.8; }
+.log-player { color: #c7e3ff; }
+.log-enemy { color: #ffb0b5; }
+.log-good { color: #a8f0c2; }
+.log-bad { color: #ff8f98; }
+.log-info { color: var(--text); }
+@media (min-width: 860px), (orientation: landscape) and (min-width: 560px) {
+  .log {
+    align-content: start;
+    min-height: 150px;
+  }
+}
+@keyframes log-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- 方向ボタン ---- */
+.dpad {
+  --pad: 50px;
+  display: grid;
+  grid-template-areas: '. up .' 'left center right' '. down .';
+  grid-template-columns: repeat(3, var(--pad));
+  grid-template-rows: repeat(3, var(--pad));
+  gap: 5px;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.dpad-btn {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid #5a4a7c;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #34284d, #241b36);
+  color: var(--amber-2);
+  font-size: 1.3rem;
+  box-shadow: 0 3px 0 #120d1b;
+  transition: transform 0.05s, background 0.1s;
+}
+.dpad-btn:active {
+  transform: translateY(3px);
+  box-shadow: none;
+  background: #4a3a70;
+}
+.dpad-center {
+  grid-area: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, #1c1528, transparent 70%);
+}
+
+/* ---- 凡例・操作説明(PC) ---- */
+.guide {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  font-size: 0.82rem;
+}
+.guide-keys {
+  margin: 0 0 10px;
+  color: var(--muted);
+}
+.legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend li > span:last-child {
+  display: grid;
+  line-height: 1.25;
+}
+.legend small {
+  color: var(--muted);
+}
+.legend-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #2b2537;
+  overflow: hidden;
+}
+.legend-icon .sprite {
+  width: 100%;
+  height: 100%;
+  animation: none;
+}
+
+/* ---- マップ ---- */
+.board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #0a0710;
+  box-shadow: 0 0 0 3px #2a2138, 0 0 0 5px #0a0710, 0 14px 40px rgba(0, 0, 0, 0.6);
+  container-type: size;
+}
+.tiles {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  grid-template-rows: repeat(11, 1fr);
+}
+.tile {
+  position: relative;
+}
+.tile.floor {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+}
+.floor-a { background-color: #342e46; }
+.floor-b { background-color: #3b3452; }
+.tile.under-wall {
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 55%);
+}
+.tile.wall {
+  background-color: #5e5579;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 30%),
+    linear-gradient(rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0.38)),
+    linear-gradient(rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0.38)),
+    linear-gradient(rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0.38)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.35));
+  background-size: 100% 100%, 100% 6%, 6% 50%, 6% 50%, 100% 100%;
+  background-position: 0 0, 0 50%, 50% 0, 0 100%, 0 0;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* エンティティ(キャラ・アイテム・階段) */
+.ent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% / 11);
+  height: calc(100% / 11);
+  transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%));
+  transition: transform 110ms ease-out;
+  pointer-events: none;
+}
+.ent-static {
+  transition: none;
+}
+.player {
+  z-index: 6;
+}
+.enemy {
+  z-index: 5;
+}
+.sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.bumper,
+.hurter,
+.lunge,
+.bob {
+  width: 100%;
+  height: 100%;
+}
+.bob {
+  animation: bob 1.3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.37s);
+}
+.lantern-light {
+  animation: lantern 2.4s ease-in-out infinite alternate;
+  transform-origin: 25.8px 21.5px;
+}
+.sprite-item {
+  animation: item-float 1.6s ease-in-out infinite alternate;
+}
+.sprite-stairs.is-open {
+  animation: stairs-glow 1.6s ease-in-out infinite alternate;
+}
+.sprite-stairs.is-locked {
+  opacity: 0.85;
+}
+.locked-shake-0 .sprite-stairs { animation: locked-shake-a 0.3s; }
+.locked-shake-1 .sprite-stairs { animation: locked-shake-b 0.3s; }
+
+.enemy-hp {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 2%;
+  height: max(4px, 9%);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+.enemy-hp-fill {
+  height: 100%;
+  background: linear-gradient(180deg, #ff8a90, #e03640);
+  transition: width 0.2s;
+}
+
+/* 攻撃の踏み込み: -0 と -1 を交互に使い、同じ向きでもアニメーションをやり直す */
+.lunge-0 { animation: lunge-a 0.2s ease-out; }
+.lunge-1 { animation: lunge-b 0.2s ease-out; }
+@keyframes lunge-a {
+  0% { transform: translate(0, 0); }
+  40% { transform: translate(calc(var(--dx) * 42%), calc(var(--dy) * 42%)) scale(1.12); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes lunge-b {
+  0% { transform: translate(0, 0); }
+  40% { transform: translate(calc(var(--dx) * 42%), calc(var(--dy) * 42%)) scale(1.12); }
+  100% { transform: translate(0, 0); }
+}
+
+/* 壁にぶつかったときの小さな反応 */
+.bumper.bump-up.bump-0 { animation: bump-up-a 0.16s; }
+.bumper.bump-up.bump-1 { animation: bump-up-b 0.16s; }
+.bumper.bump-down.bump-0 { animation: bump-down-a 0.16s; }
+.bumper.bump-down.bump-1 { animation: bump-down-b 0.16s; }
+.bumper.bump-left.bump-0 { animation: bump-left-a 0.16s; }
+.bumper.bump-left.bump-1 { animation: bump-left-b 0.16s; }
+.bumper.bump-right.bump-0 { animation: bump-right-a 0.16s; }
+.bumper.bump-right.bump-1 { animation: bump-right-b 0.16s; }
+@keyframes bump-up-a { 40% { transform: translateY(-14%); } }
+@keyframes bump-up-b { 40% { transform: translateY(-14%); } }
+@keyframes bump-down-a { 40% { transform: translateY(14%); } }
+@keyframes bump-down-b { 40% { transform: translateY(14%); } }
+@keyframes bump-left-a { 40% { transform: translateX(-14%); } }
+@keyframes bump-left-b { 40% { transform: translateX(-14%); } }
+@keyframes bump-right-a { 40% { transform: translateX(14%); } }
+@keyframes bump-right-b { 40% { transform: translateX(14%); } }
+
+/* 被弾 */
+.hurter.hurt-0 { animation: hurt-a 0.35s; }
+.hurter.hurt-1 { animation: hurt-b 0.35s; }
+@keyframes hurt-a {
+  0%, 100% { filter: none; }
+  20%, 60% { filter: brightness(2.2) saturate(0) drop-shadow(0 0 6px #f0505a); transform: translateX(-6%); }
+  40% { transform: translateX(6%); }
+}
+@keyframes hurt-b {
+  0%, 100% { filter: none; }
+  20%, 60% { filter: brightness(2.2) saturate(0) drop-shadow(0 0 6px #f0505a); transform: translateX(-6%); }
+  40% { transform: translateX(6%); }
+}
+.shake-0 { animation: shake-a 0.32s; }
+.shake-1 { animation: shake-b 0.32s; }
+@keyframes shake-a {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-5px, 2px); }
+  40% { transform: translate(5px, -2px); }
+  60% { transform: translate(-3px, 1px); }
+  80% { transform: translate(3px, -1px); }
+}
+@keyframes shake-b {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-5px, 2px); }
+  40% { transform: translate(5px, -2px); }
+  60% { transform: translate(-3px, 1px); }
+  80% { transform: translate(3px, -1px); }
+}
+.hurt-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  background: radial-gradient(ellipse at center, rgba(240, 40, 55, 0.05) 30%, rgba(240, 40, 55, 0.55));
+  pointer-events: none;
+  animation: flash 0.45s ease-out forwards;
+}
+@keyframes flash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.lowhp-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+  box-shadow: inset 0 0 calc(var(--cell) * 1.6) rgba(230, 30, 50, 0.55);
+  animation: vignette 1.2s ease-in-out infinite alternate;
+}
+@keyframes vignette {
+  from { opacity: 0.35; }
+  to { opacity: 0.9; }
+}
+
+/* 倒れる/消える */
+.ghost {
+  z-index: 4;
+  animation: ghost 0.45s ease-in forwards;
+}
+@keyframes ghost {
+  0% { opacity: 1; transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%)) scale(1); filter: brightness(2); }
+  100% { opacity: 0; transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100% - 20%)) scale(0.4) rotate(18deg); }
+}
+.player-dead .lunge {
+  animation: dead 1.1s ease-in forwards;
+}
+@keyframes dead {
+  0% { transform: none; opacity: 1; }
+  100% { transform: translateY(18%) rotate(80deg) scale(0.9); opacity: 0.25; filter: grayscale(1); }
+}
+
+@keyframes bob {
+  from { transform: translateY(0) scale(1, 1); }
+  to { transform: translateY(-4%) scale(1.02, 0.98); }
+}
+@keyframes lantern {
+  from { opacity: 0.7; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1.1); }
+}
+@keyframes item-float {
+  from { transform: translateY(0); filter: drop-shadow(0 0 3px rgba(74, 222, 128, 0.5)); }
+  to { transform: translateY(-9%); filter: drop-shadow(0 0 9px rgba(74, 222, 128, 0.9)); }
+}
+@keyframes stairs-glow {
+  from { filter: drop-shadow(0 0 2px rgba(255, 181, 71, 0.4)); }
+  to { filter: drop-shadow(0 0 10px rgba(255, 181, 71, 1)); }
+}
+@keyframes locked-shake-a {
+  25% { transform: translateX(-8%); } 75% { transform: translateX(8%); }
+}
+@keyframes locked-shake-b {
+  25% { transform: translateX(-8%); } 75% { transform: translateX(8%); }
+}
+
+/* ランタンの明かり: 3倍の大きさの暗幕を、穴の中心がプレイヤーに来るように動かす */
+.light {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 8;
+  width: 300%;
+  height: 300%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 190, 90, 0.1) 0%,
+    rgba(0, 0, 0, 0) 9%,
+    rgba(6, 3, 12, 0.1) 17%,
+    rgba(6, 3, 12, 0.34) 27%,
+    rgba(6, 3, 12, 0.44) 100%
+  );
+  transform: translate(
+    calc(((var(--px) + 0.5) / 11 - 1.5) / 3 * 100%),
+    calc(((var(--py) + 0.5) / 11 - 1.5) / 3 * 100%)
+  );
+  transition: transform 110ms ease-out;
+}
+
+.board-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  pointer-events: none;
+  box-shadow: inset 0 0 calc(var(--cell) * 0.9) rgba(0, 0, 0, 0.55);
+  border-radius: inherit;
+}
+
+/* パーティクル */
+.burst {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 9;
+  width: calc(100% / 11);
+  height: calc(100% / 11);
+  transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%));
+  pointer-events: none;
+}
+.burst span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--s) * 100%);
+  height: calc(var(--s) * 100%);
+  margin: calc(var(--s) * -50%) 0 0 calc(var(--s) * -50%);
+  border-radius: 50%;
+  background: #fff;
+  animation: burst 0.6s ease-out forwards;
+}
+.burst-kill span { background: #ffb547; box-shadow: 0 0 6px #ff7a2f; }
+.burst-hit span { background: #fff4d0; box-shadow: 0 0 5px #fff; }
+.burst-heal span { background: #6ef0a0; box-shadow: 0 0 8px #4ade80; animation-name: burst-up; }
+@keyframes burst {
+  from { transform: rotate(var(--a)) translateX(0) scale(1); opacity: 1; }
+  to { transform: rotate(var(--a)) translateX(calc(var(--d) * 100% * 3)) scale(0.2); opacity: 0; }
+}
+@keyframes burst-up {
+  from { transform: rotate(var(--a)) translateX(calc(var(--d) * 100%)) translateY(0) scale(1); opacity: 1; }
+  to { transform: rotate(var(--a)) translateX(calc(var(--d) * 100% * 1.6)) translateY(-120%) scale(0.2); opacity: 0; }
+}
+
+/* ダメージ表示 */
+.popup {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 14;
+  width: calc(100% / 11);
+  height: calc(100% / 11);
+  transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%));
+  pointer-events: none;
+}
+.popup span {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  translate: -50% 0;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: calc(var(--cell) * 0.5);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  color: #fff;
+  -webkit-text-stroke: calc(var(--cell) * 0.05) rgba(0, 0, 0, 0.85);
+  paint-order: stroke fill;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+  animation: popup 0.95s ease-out forwards;
+}
+.popup-enemy-dmg span { color: #ffe07a; }
+.popup-player-dmg span { color: #ff6b75; }
+.popup-heal span { color: #7dffae; }
+.popup-kill span { color: #ffb547; font-size: calc(var(--cell) * 0.4); }
+@keyframes popup {
+  0% { transform: translateY(20%) scale(0.5); opacity: 0; }
+  15% { transform: translateY(-20%) scale(1.25); opacity: 1; }
+  30% { transform: translateY(-30%) scale(1); }
+  100% { transform: translateY(-130%) scale(1); opacity: 0; }
+}
+
+/* 階層移動の演出 */
+.floor-banner {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #07040c;
+  pointer-events: none;
+  animation: banner-bg 1.15s ease-in-out forwards;
+}
+.floor-banner-inner {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  animation: banner-text 1.15s ease-out forwards;
+}
+.floor-banner-num {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  color: var(--amber-2);
+  text-shadow: 0 0 24px rgba(255, 181, 71, 0.7);
+}
+.floor-banner-name {
+  color: var(--muted);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+@keyframes banner-bg {
+  0% { opacity: 1; }
+  55% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+@keyframes banner-text {
+  0% { opacity: 0; transform: scale(0.9); letter-spacing: 0.1em; }
+  25% { opacity: 1; transform: scale(1); letter-spacing: 0.2em; }
+  60% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+
+/* ---- 小さい画面向けの調整(他の指定より後ろに置いて優先させる) ---- */
+@media (max-width: 420px) {
+  .hud-floor-name {
+    display: none;
+  }
+  .hud {
+    gap: 4px;
+    padding: 6px 10px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .game {
+    --board: min(calc(100svh - 16px), calc(100vw - 280px));
+    grid-template-columns: var(--board) minmax(240px, 1fr);
+    gap: 6px 10px;
+    padding: 8px;
+  }
+  .log,
+  .guide,
+  .hud-stats > div:last-child {
+    display: none;
+  }
+  .hud-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hud {
+    padding: 6px 10px;
+  }
+  .dpad {
+    --pad: 46px;
+  }
+}
